@@ -1,3 +1,5 @@
+// even if marks are more than 35 , but less than 65% in any round, person fails. Try to use a var. to check it.
+
 // Creation of a Table in the DB Manually  ->
 //librarry imports
 // mongo connections
@@ -86,16 +88,23 @@ async function main(){
 
     const technicalRoundMarks =parseFloat(
         getValidInput(
-            "enter total marks: ",
+            "enter technicalRoundMarks marks: ",
             (input)=> !isNaN(input) && input>=0 && input <=20,
             "name must be between 0 and 20!"
         )
     );
 
     // LOGICS-
+    const passPercentage= 0.65;
+    const isRejected = [round1Marks,round2Marks,round3Marks,technicalRoundMarks].some((marks,index) =>{
+            const maxMarks = index<3 ?10 :20;
+            return marks < passPercentage * maxMarks ; 
+        }
+    );
+
 
     const totalMarks = round1Marks+round2Marks +round3Marks +technicalRoundMarks;
-    const result = totalMarks>=35 ? "selected" : "reject";
+    const result = isRejected? "reject" : (totalMarks>=35 ? "selected" : "reject");
 
     // saving the data
 
@@ -120,8 +129,13 @@ async function main(){
 
     let rank = 1;
     for(let i=0;i<allRecords.length ; i++){
-        if(i>0 && allRecords[i].totalMarks<allRecords[i-1].totalMarks)rank = i+1;
+        if(i>0 && allRecords[i].totalMarks<allRecords[i-1].totalMarks){
+            rank++;
+
+        };
         allRecords[i].rank = rank;
+        
+
 
         await collection.updateOne(
             {_id: allRecords[i]._id},
